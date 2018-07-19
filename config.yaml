@@ -1,0 +1,7 @@
+options:
+  git-repo:
+    value: https://github.com/chrisheckler/flask_apps.git
+    type: string
+    default: ""
+    description: |
+      This app is further practice using Juju

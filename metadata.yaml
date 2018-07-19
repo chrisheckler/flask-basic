@@ -1,0 +1,9 @@
+name:  flask-basic
+summary: Super simple Flask app 
+maintainer: Chris Heckler <hecklerchris@hotmail.com>
+description: |
+ A super simple app for practive
+tags:
+  - webapp
+series:
+  - bionic
