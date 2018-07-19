@@ -1,6 +1,5 @@
 options:
   git-repo:
-    value: https://github.com/chrisheckler/flask_apps.git
     type: string
     default: ""
     description: |
