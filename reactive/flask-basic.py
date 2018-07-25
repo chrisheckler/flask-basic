@@ -32,6 +32,7 @@ def flask_install():
     """Setup virtualenv,dirs,gunicorn,flask"""
 
     status_set('maintenance', 'Installing Flask')
+
     call(['git', 'clone', config.get('git-repo'), '/home/ubuntu/flask'])
     call(['apt-get', 'install', 'python3-pip'])
     call(['pip3', 'install', 'virtualenv'])
@@ -40,3 +41,9 @@ def flask_install():
           cwd = '/home/ubuntu/flask')
     call(['pip3', 'install', 'gunicorn', '-U', '-t', '.venv'],
           cwd = '/home/ubuntu/flask')
+
+    log('Flask Installed and Git project cloned')
+    status_set('flask.installed')
+
+
+
