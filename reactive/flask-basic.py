@@ -20,7 +20,7 @@ from charmhelpers.core.host import (
 config = config()
 
 
-@when_not('config.git-repo')
+@when_not('config.set.git-repo')
 def set_blocked():
     """Git repo needed"""
 
@@ -36,14 +36,12 @@ def flask_install():
     call(['git', 'clone', config.get('git-repo'), '/home/ubuntu/flask'])
     call(['apt-get', 'install', 'python3-pip'])
     call(['pip3', 'install', 'virtualenv'])
-    call(['virtualenv','-p',' /usr/bin/python3.6', '/home/ubuntu/flask/.venv'])
-    call(['pip3', 'install', 'Flask','-U', '-t', '.venv'],
-          cwd = '/home/ubuntu/flask')
-    call(['pip3', 'install', 'gunicorn', '-U', '-t', '.venv'],
-          cwd = '/home/ubuntu/flask')
+    call(['virtualenv','-p', '/usr/bin/python3.6', '/home/ubuntu/flask/.venv'])
+    call(['/home/ubuntu/flask/.venv/bin/pip3', 'install', 'Flask'])
+    call(['/home/ubuntu/flask/.venv/bin/pip3', 'install', 'gunicorn'])
 
     log('Flask Installed and Git project cloned')
-    status_set('flask.installed')
-
+    status_set('active', 'flask installed')
+    set_flag('flask.installed')
 
 
