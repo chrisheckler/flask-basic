@@ -7,5 +7,5 @@ options:
     use_venv: true
     include_system_packages: false
 packages:
-  - 'python3 -m pip'
+  - 'python3-pip'
 repo: 'https://github.com/chrisheckler/layer-flask-basic'
