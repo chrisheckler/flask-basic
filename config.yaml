@@ -1,6 +1,6 @@
 options:
   git-repo:
     type: string
-    default: "https://github.com/chrisheckler/flask_apps.git"
+    default: ""
     description: |
-     tThis app is further practice using Juju
+      The flask git repo that will be cloned into the charm. 

@@ -10,16 +10,23 @@ from charms.reactive import (
 )
 from charmhelpers.core.templating import render
 from charmhelpers.core import unitdata
-from charmhelpers.core.hookenv import log, status_set, config, charm_dir, open_port
+from charmhelpers.core.hookenv import (
+    log,
+    status_set,
+    config,
+    charm_dir,
+    open_port
+)
 from charmhelpers.core.host import (
     service_stop,
     service_start,
     service_restart,
     service_running,
 )
-FLASK_APP = Path('/srv/flask_app')
 
-config = config()
+FLASK_APP = Path('/srv/flask_app')
+PIP = Path('/usr/bin/pip3')
+FLASK_APP_DEPS = Path(FLASK_APP / 'requirements.txt')
 
 @when_not('config.set.git-repo')
 def set_blocked():
@@ -28,40 +35,46 @@ def set_blocked():
     status_set('blocked', "please set 'git-repo' in the charm config")
 
 
-@when_not('flask.installed')
-def flask_install():
+@when_not('flask.app.installed')
+@when('apt.installed.python3-pip')
+def flask_app_install():
     """setup virtualenv,dirs,gunicorn,flask"""
+    conf = config()
 
-    status_set('maintenance', 'installing flask')
-
-    call(['git', 'clone', config.get('git-repo'), '/home/ubuntu/flask'])
-    call(['apt-get', 'install', 'python3-pip'])
-    call(['pip3', 'install', 'virtualenv'])
-    call(['virtualenv','-p', '/usr/bin/python3.6', '/home/ubuntu/flask/.venv'])
-    call(['/home/ubuntu/flask/.venv/bin/pip3', 'install', 'flask'])
-    call(['/home/ubuntu/flask/.venv/bin/pip3', 'install', 'gunicorn'])
+    status_set('maintenance', 'installing flask app from github')
+    if FLASK_APP.exists():
+        call(['rm', '-rf', str(FLASK_APP)])
+    call(['git', 'clone', conf.get('git-repo'), str(FLASK_APP)])
+    call([str(PIP), 'install', '-r', str(FLASK_APP_DEPS)])
+    call([str(PIP), 'install', 'gunicorn'])
 
     log('flask installed and git project cloned')
-    status_set('active', 'flask installed')
-    set_flag('flask.installed')
+    status_set('active', 'Flask app and deps installed')
+    set_flag('flask.app.installed')
 
 
-@when_not('gunicorn.config')
-@when('flask.installed',
-      'config.set.git-repo')
-def gunicorn_run():
+@when('flask.app.installed')
+@when_not('flask.app.running')
+def systemd_service_start():
     """Configure Gunicorn"""
 
-    status_set('maintenance', 'setting up gunicorn')
+    render('flask.service.tmpl', '/etc/systemd/system/flask.service', context={})
 
-    render('gunicorn.tmpl', '/etc/systemd/system/meflask.service', context={})
-    call(['systemctl', 'meflask'])
-    call(['systemctl', 'enable', 'meflask.service'])
+    call(['systemctl', 'flask'])
+    call(['systemctl', 'enable', 'flask.service'])
 
-    service_start('meflask')
+    if not service_running('flask'):
+        service_start('flask')
+    else:
+        service_restart('flask')
+
     open_port(5000)
 
     log('gunicorn configured')
-    status_set('active', 'gunicorn is configured')
-    set_flag('gunicorn.config')
+    set_flag('flask.app.running')
+
+@when('flask.app.running')
+def set_avail_status():
+    status_set('active', 'Flask application available')
+
 

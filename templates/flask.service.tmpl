@@ -6,8 +6,8 @@ After=network.target
 Type=simple
 User=root
 Group=root
-WorkingDirectory=/flask/calc_nums
-ExecStart=/flask_app/.venv/bin/gunicorn --bind 0.0.0.0:5000 application:app 
+WorkingDirectory=/srv/flask_app
+ExecStart=/usr/local/bin/gunicorn --bind 0.0.0.0:5000 application:app
 
 [Install]
 WantedBy=multi-user.target
