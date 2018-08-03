@@ -1,6 +1,7 @@
 includes: 
   - 'layer:basic'
   - 'layer:apt'
+  - 'layer:pgsql'
 options:
   apt:
     packages:

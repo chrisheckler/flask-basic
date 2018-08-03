@@ -26,7 +26,7 @@ from charmhelpers.core.host import (
 
 FLASK_APP = Path('/srv/flask_app')
 PIP = Path('/usr/bin/pip3')
-FLASK_APP_DEPS = Path(FLASK_APP / 'requirements.txt')
+FLASK_APP_DEPS = Path(FLASK_APP / 'bucketlist' / 'requirements.txt')
 
 @when_not('config.set.git-repo')
 def set_blocked():
@@ -56,7 +56,7 @@ def flask_app_install():
 @when('flask.app.installed')
 @when_not('flask.app.running')
 def systemd_service_start():
-    """Configure Gunicorn"""
+    """Establish systemd and run gunicorn"""
 
     render('flask.service.tmpl', '/etc/systemd/system/flask.service', context={})
 
@@ -73,8 +73,25 @@ def systemd_service_start():
     log('gunicorn configured')
     set_flag('flask.app.running')
 
+
 @when('flask.app.running')
 def set_avail_status():
     status_set('active', 'Flask application available')
 
+
+@when('pgsql.connected')
+@when_not('flask.pgsql.requested')
+def request_database():
+    """When connection established to postgres,
+       request databse.
+    """
+
+    status_set('maintenance', 'Requesting PostgreSQL database')
+
+    pgsql = endpoint('pgsql.connected')
+    pgsql.set_database('flask')
+
+    log('Database Available')
+    status_set('active', 'pgsql.requested')
+    set_flag('flask.pgsql.requested')
 
