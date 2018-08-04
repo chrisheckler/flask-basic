@@ -7,7 +7,10 @@ from charms.reactive import (
     when,
     when_not,
     set_flag,
+    clear_flag,
+    endpoint_from_flag,
 )
+
 from charmhelpers.core.templating import render
 from charmhelpers.core import unitdata
 from charmhelpers.core.hookenv import (
@@ -17,6 +20,7 @@ from charmhelpers.core.hookenv import (
     charm_dir,
     open_port
 )
+
 from charmhelpers.core.host import (
     service_stop,
     service_start,
@@ -27,6 +31,9 @@ from charmhelpers.core.host import (
 FLASK_APP = Path('/srv/flask_app')
 PIP = Path('/usr/bin/pip3')
 FLASK_APP_DEPS = Path(FLASK_APP / 'bucketlist' / 'requirements.txt')
+
+kv = unitdata.kv()
+
 
 @when_not('config.set.git-repo')
 def set_blocked():
@@ -94,4 +101,27 @@ def request_database():
     log('Database Available')
     status_set('active', 'pgsql.requested')
     set_flag('flask.pgsql.requested')
+
+
+@when('pgsql.master.available',
+      'flask.pgsql.requested')
+@when_not('flask.pgsql.available')
+def save_database_connection():
+    """Saving datatbase connection info"""
+
+    status_set('maintenance', 'Getting/Setting flask database info')
+
+    pgsql = endpoint_from_flag('pgsql.master.available')
+
+    kv.set('dbname', pgsql.master.dbname)
+    kv.set('dbuser', pgsql.master.user)
+    kv.set('dbpass', pgsql.master.password)
+    kv.set('dbhost', pgsql.master.host)
+    kv.set('dbport', pgsql.master.port)
+
+    log('Flask Database Available')
+    status_set('active', 'Flask Database Available')
+    set_flag('flask.pgsql.available')
+
+
 
